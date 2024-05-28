@@ -1,0 +1,74 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwk1hvg8ejx71"]
+
+[ext_resource type="Script" path="res://BarContainer.cs" id="1_0kou3"]
+[ext_resource type="AudioStream" uid="uid://cfht76wguno4w" path="res://audio/beep_1.mp3" id="2_0jrn4"]
+
+[node name="Main" type="Node2D"]
+
+[node name="SortingVisualizer" type="Node2D" parent="."]
+
+[node name="BarContainer" type="Control" parent="SortingVisualizer"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+script = ExtResource("1_0kou3")
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 25.0
+offset_top = 25.0
+offset_right = 275.0
+offset_bottom = 255.0
+
+[node name="ListSizeSelect" type="SpinBox" parent="UI"]
+layout_mode = 0
+offset_right = 187.0
+offset_bottom = 31.0
+min_value = 2.0
+max_value = 100000.0
+value = 100.0
+
+[node name="AlgorithmSelect" type="OptionButton" parent="UI"]
+layout_mode = 0
+offset_top = 40.0
+offset_right = 171.0
+offset_bottom = 76.0
+
+[node name="SpeedSlider" type="HSlider" parent="UI"]
+layout_mode = 0
+offset_top = 87.0
+offset_right = 170.0
+offset_bottom = 108.0
+min_value = 10.0
+max_value = 500.0
+value = 10.0
+
+[node name="PlayButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_top = 115.0
+offset_right = 48.0
+offset_bottom = 151.0
+text = "Play"
+
+[node name="PauseButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_left = 57.0
+offset_top = 115.0
+offset_right = 112.0
+offset_bottom = 151.0
+text = "Pause"
+
+[node name="ResetButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 115.0
+offset_right = 171.0
+offset_bottom = 151.0
+text = "Reset"
+
+[node name="Sound" type="Node2D" parent="."]
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Sound"]
+stream = ExtResource("2_0jrn4")
