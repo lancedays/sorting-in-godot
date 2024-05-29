@@ -68,6 +68,22 @@ offset_right = 171.0
 offset_bottom = 151.0
 text = "Reset"
 
+[node name="MuteButton" type="CheckButton" parent="UI"]
+layout_mode = 0
+offset_left = 236.0
+offset_top = 2.0
+offset_right = 280.0
+offset_bottom = 26.0
+
+[node name="Label" type="Label" parent="UI/MuteButton"]
+layout_mode = 0
+offset_left = -42.0
+offset_top = -1.0
+offset_right = -1.0
+offset_bottom = 24.0
+text = "Mute
+"
+
 [node name="Sound" type="Node2D" parent="."]
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Sound"]
