@@ -194,7 +194,7 @@ public partial class BarContainer : Control
 					CallDeferred(nameof(DeferredQueueRedraw));
 
 					// Play sound
-					CallDeferred(nameof(DeferredPlaySound));
+					if (!_isMuted) { CallDeferred(nameof(DeferredPlaySound));}
 
 					// Calculate wait time based on slider value
 					float waitTime = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
@@ -248,9 +248,6 @@ public partial class BarContainer : Control
 
 	private void DeferredPlaySound()
 	{
-		if (!_isMuted)
-		{
-			_audioStreamPlayer.Play();
-		}
+		_audioStreamPlayer.Play();
 	}
 }
