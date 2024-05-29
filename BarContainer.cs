@@ -44,7 +44,8 @@ public partial class BarContainer : Control
 		// Add items to the OptionButton
 		_algorithmSelect.AddItem("Bubble Sort");
 		_algorithmSelect.AddItem("Insertion Sort");
-		// Add more sorting algorithms here, e.g., _algorithmSelect.AddItem("Insertion Sort");
+		_algorithmSelect.AddItem("Merge Sort");
+		_algorithmSelect.AddItem("Selection Sort");
 
 		// Set the initial total rectangles from the SpinBox value
 		_totalRectangles = (int)_spinBox.Value;
@@ -58,7 +59,6 @@ public partial class BarContainer : Control
 		// Shuffle the heights initially
 		ShuffleRectangles();
 	}
-
 	private void InitializeRectangles()
 	{
 		_heights.Clear();
@@ -82,7 +82,6 @@ public partial class BarContainer : Control
 			_heights.Add(currentHeight);
 		}
 	}
-
 	public override void _Draw()
 	{
 		// Get the size of the viewport
@@ -111,7 +110,6 @@ public partial class BarContainer : Control
 			DrawRect(new Rect2(currentX, currentY, width, currentHeight), color);
 		}
 	}
-
 	private void OnSpinBoxValueChanged(double value)
 	{
 		// Update the total rectangles from the SpinBox value
@@ -124,7 +122,6 @@ public partial class BarContainer : Control
 		// Redraw the rectangles
 		QueueRedraw();
 	}
-
 	private void OnPlayButtonPressed()
 	{
 		if (!_isSorting)
@@ -135,7 +132,6 @@ public partial class BarContainer : Control
 			Task.Run(() => Sort(selectedAlgorithm));
 		}
 	}
-
 	private void OnResetButtonPressed()
 	{
 		if (_isSorting)
@@ -151,17 +147,14 @@ public partial class BarContainer : Control
 		// Redraw the rectangles
 		QueueRedraw();
 	}
-
 	private void OnPauseButtonPressed()
 	{
 		_isPaused = !_isPaused;
 	}
-
 	private void OnMuteButtonPressed()
 	{
 		_isMuted = !_isMuted;
 	}
-
 	private async void Sort(string algorithm)
 	{
 		switch (algorithm)
@@ -172,11 +165,15 @@ public partial class BarContainer : Control
 			case "Insertion Sort":
 				await InsertionSort();
 				break;
-				// Add cases for other sorting algorithms here
+			case "Merge Sort":
+				await MergeSort(0, _heights.Count - 1);
+				break;
+			case "Selection Sort":
+				await SelectionSort();
+				break;
 		}
 		_isSorting = false;
 	}
-
 	private async Task BubbleSort()
 	{
 		int n = _heights.Count;
@@ -227,7 +224,6 @@ public partial class BarContainer : Control
 		}
 		_evaluatedIndex = -1;
 	}
-
 	private async Task InsertionSort()
 	{
 		int n = _heights.Count;
@@ -276,8 +272,148 @@ public partial class BarContainer : Control
 		}
 		_evaluatedIndex = -1;
 	}
+	private async Task Merge(int left, int mid, int right)
+	{
+		int n1 = mid - left + 1;
+		int n2 = right - mid;
 
+		float[] leftArray = new float[n1];
+		float[] rightArray = new float[n2];
 
+		for (int i = 0; i < n1; i++)
+			leftArray[i] = _heights[left + i];
+		for (int j = 0; j < n2; j++)
+			rightArray[j] = _heights[mid + 1 + j];
+
+		int k = left;
+		int iIndex = 0, jIndex = 0;
+
+		float maxDelay = 1.0f; // 1 second delay for the slowest speed
+
+		while (iIndex < n1 && jIndex < n2 && _isSorting)
+		{
+			_evaluatedIndex = k;
+			if (leftArray[iIndex] <= rightArray[jIndex])
+			{
+				_heights[k] = leftArray[iIndex];
+				iIndex++;
+			}
+			else
+			{
+				_heights[k] = rightArray[jIndex];
+				jIndex++;
+			}
+			k++;
+
+			// Redraw the rectangles
+			CallDeferred(nameof(DeferredQueueRedraw));
+
+			// Play sound
+			if (!_isMuted) { CallDeferred(nameof(DeferredPlaySound)); }
+
+			// Calculate wait time based on slider value
+			float waitTime = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
+			await Task.Delay(TimeSpan.FromSeconds(waitTime));
+
+			// Wait if paused
+			while (_isPaused)
+			{
+				await Task.Delay(100);
+			}
+		}
+
+		while (iIndex < n1 && _isSorting)
+		{
+			_heights[k] = leftArray[iIndex];
+			iIndex++;
+			k++;
+
+			// Redraw the rectangles
+			CallDeferred(nameof(DeferredQueueRedraw));
+
+			float waitTime = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
+			await Task.Delay(TimeSpan.FromSeconds(waitTime));
+		}
+
+		while (jIndex < n2 && _isSorting)
+		{
+			_heights[k] = rightArray[jIndex];
+			jIndex++;
+			k++;
+
+			// Redraw the rectangles
+			CallDeferred(nameof(DeferredQueueRedraw));
+
+			float waitTime = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
+			await Task.Delay(TimeSpan.FromSeconds(waitTime));
+		}
+
+		_evaluatedIndex = -1;
+	}
+	private async Task MergeSort(int left, int right)
+	{
+		if (left < right && _isSorting)
+		{
+			int mid = left + (right - left) / 2;
+
+			await MergeSort(left, mid);
+			await MergeSort(mid + 1, right);
+
+			await Merge(left, mid, right);
+		}
+	}
+	private async Task SelectionSort()
+	{
+		int n = _heights.Count;
+		float maxDelay = 1.0f; // 1 second delay for the slowest speed
+
+		for (int i = 0; i < n - 1 && _isSorting; i++)
+		{
+			int minIndex = i;
+			for (int j = i + 1; j < n && _isSorting; j++)
+			{
+				_evaluatedIndex = j;
+				if (_heights[j] < _heights[minIndex])
+				{
+					minIndex = j;
+				}
+
+				// Redraw the rectangles
+				CallDeferred(nameof(DeferredQueueRedraw));
+
+				float waitTimeStep = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
+				await Task.Delay(TimeSpan.FromSeconds(waitTimeStep));
+
+				// Wait if paused
+				while (_isPaused)
+				{
+					await Task.Delay(100);
+				}
+			}
+
+			// Swap the found minimum element with the first element
+			float temp = _heights[minIndex];
+			_heights[minIndex] = _heights[i];
+			_heights[i] = temp;
+
+			// Redraw the rectangles
+			CallDeferred(nameof(DeferredQueueRedraw));
+
+			// Play sound
+			if (!_isMuted) { CallDeferred(nameof(DeferredPlaySound)); }
+
+			// Calculate wait time based on slider value
+			float waitTime = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
+			await Task.Delay(TimeSpan.FromSeconds(waitTime));
+
+			// Wait if paused
+			while (_isPaused)
+			{
+				await Task.Delay(100);
+			}
+		}
+		_evaluatedIndex = -1;
+	}
 	private void ShuffleRectangles()
 	{
 		Random rng = new Random();
@@ -294,12 +430,10 @@ public partial class BarContainer : Control
 		// Redraw the rectangles
 		QueueRedraw();
 	}
-
 	private void DeferredQueueRedraw()
 	{
 		QueueRedraw();
 	}
-
 	private void DeferredPlaySound()
 	{
 		_audioStreamPlayer.Play();
