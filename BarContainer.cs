@@ -43,6 +43,7 @@ public partial class BarContainer : Control
 
 		// Add items to the OptionButton
 		_algorithmSelect.AddItem("Bubble Sort");
+		_algorithmSelect.AddItem("Insertion Sort");
 		// Add more sorting algorithms here, e.g., _algorithmSelect.AddItem("Insertion Sort");
 
 		// Set the initial total rectangles from the SpinBox value
@@ -168,6 +169,9 @@ public partial class BarContainer : Control
 			case "Bubble Sort":
 				await BubbleSort();
 				break;
+			case "Insertion Sort":
+				await InsertionSort();
+				break;
 				// Add cases for other sorting algorithms here
 		}
 		_isSorting = false;
@@ -194,7 +198,7 @@ public partial class BarContainer : Control
 					CallDeferred(nameof(DeferredQueueRedraw));
 
 					// Play sound
-					if (!_isMuted) { CallDeferred(nameof(DeferredPlaySound));}
+					if (!_isMuted) { CallDeferred(nameof(DeferredPlaySound)); }
 
 					// Calculate wait time based on slider value
 					float waitTime = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
@@ -223,6 +227,56 @@ public partial class BarContainer : Control
 		}
 		_evaluatedIndex = -1;
 	}
+
+	private async Task InsertionSort()
+	{
+		int n = _heights.Count;
+		float maxDelay = 1.0f; // 1 second delay for the slowest speed
+		for (int i = 1; i < n && _isSorting; i++)
+		{
+			float key = _heights[i];
+			int j = i - 1;
+
+			while (j >= 0 && _heights[j] > key && _isSorting)
+			{
+				_heights[j + 1] = _heights[j];
+				_evaluatedIndex = j;
+				j = j - 1;
+
+				// Redraw the rectangles
+				CallDeferred(nameof(DeferredQueueRedraw));
+
+				// Play sound
+				if (!_isMuted) { CallDeferred(nameof(DeferredPlaySound)); }
+
+				// Calculate wait time based on slider value
+				float waitTime = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
+				await Task.Delay(TimeSpan.FromSeconds(waitTime));
+
+				// Wait if paused
+				while (_isPaused)
+				{
+					await Task.Delay(100);
+				}
+			}
+			_heights[j + 1] = key;
+
+			// Redraw the rectangles
+			CallDeferred(nameof(DeferredQueueRedraw));
+
+			// Calculate wait time based on slider value
+			float waitTimeStep = (float)(maxDelay / Math.Max(1, _speedSlider.Value));
+			await Task.Delay(TimeSpan.FromSeconds(waitTimeStep));
+
+			// Wait if paused
+			while (_isPaused)
+			{
+				await Task.Delay(100);
+			}
+		}
+		_evaluatedIndex = -1;
+	}
+
 
 	private void ShuffleRectangles()
 	{
